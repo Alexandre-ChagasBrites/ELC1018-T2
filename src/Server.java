@@ -77,7 +77,10 @@ public class Server {
             System.out.println("Running Room Chat: " + this.roomName);
             try {
                 while (!this.shouldCloseRoom) {
-                    Pair<String, String> messagePair = this.messageFifo.poll();
+                    Pair<String, String> messagePair;
+                    synchronized(this.messageFifo) {
+                        messagePair = this.messageFifo.poll(); 
+                    }
                     if (messagePair != null) {
                         System.out.println("Propagating message pair: " + messagePair.toString());
 
@@ -96,7 +99,9 @@ public class Server {
         @Override
         public void sendMsg(String usrName, String msg) {
             // Add the message to our FIFO queue so it can be delivered to uers
-            this.messageFifo.add(new Pair<String, String>(usrName, msg));
+            synchronized(this.messageFifo) {
+                this.messageFifo.add(new Pair<String, String>(usrName, msg));
+            }
         }
 
         @Override
