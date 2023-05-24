@@ -107,7 +107,7 @@ public class Server {
         @Override
         public void leaveRoom(String usrName) {
             this.userList.remove(usrName);
-            System.out.printf("Removed user: " + usrName);
+            System.out.println("Removed user: " + usrName);
             // Notify all users that someone has left
             this.messageFifo.add(new Pair<String, String>(usrName, "Has left the room"));
         }
