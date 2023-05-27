@@ -227,7 +227,7 @@ public class Server {
             this.shouldCloseRoom = true;
             for (IUserChat user: this.userList.values()) {
                 try {
-                    user.deliverMsg("Servidor", "Sala fechada pelo servidor.");
+                    user.deliverMsg(null, "Sala fechada pelo servidor.");
                 } catch (Exception e) {
                     System.err.println("Error while sending close message to user: " + e.toString());
                     e.printStackTrace();
