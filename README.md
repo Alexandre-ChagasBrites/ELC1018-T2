@@ -41,15 +41,15 @@ sala.
 - [x] RFA12: Os usuários devem sair da sala invocando o método remoto leaveRoom(String 
 usrName) da sala.
 
-- [ ] RFA13: Uma sala só deve poder ser fechada pelo servidor. O servidor deve fechar a sala invocando 
+- [x] RFA13: Uma sala só deve poder ser fechada pelo servidor. O servidor deve fechar a sala invocando 
 o método remoto closeRoom() do controlador de sala. Caso haja usuários na sala, antes de ser 
 finalizado o controlador da sala deve enviar uma mensagem “Sala fechada pelo servidor.” aos 
 usuários.
 
-- [ ] RFA14: Após fechar a sala o servidor deve eliminar a sala da lista de salas. Cada usuário deve 
+- [x] RFA14: Após fechar a sala o servidor deve eliminar a sala da lista de salas. Cada usuário deve 
 fazer o mesmo ao receber a mensagem “Sala fechada pelo servidor.” do controlador.
 
-- [ ] RFA15: A formatação da GUI para o usuário e servidor é de livre escolha, mas deve contar no 
+- [x] RFA15: A formatação da GUI para o usuário e servidor é de livre escolha, mas deve contar no 
 mínimo com um quadro para visualização das mensagens, com a possibilidade de seleção da sala 
 pelo usuário e servidor, além de conter botões apropriados para os principais comandos (SEND, 
 CLOSE, JOIN e LEAVE).
