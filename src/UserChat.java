@@ -168,6 +168,16 @@ public class UserChat implements IUserChat {
         }
     }
 
+    private String getRoomName() {
+        try {
+            return roomStub.getRoomName();
+        } catch (Exception exception) {
+            System.err.println("Client exception: " + exception.toString());
+            exception.printStackTrace();
+            return null;
+        }
+    }
+
     private void createRoom(String roomName) {
         try { 
             serverStub.createRoom(roomName);
@@ -213,17 +223,12 @@ public class UserChat implements IUserChat {
     
     public void deliverMsg(String senderName, String msg) throws RemoteException {
         if (senderName == null && msg.equals("Sala fechada pelo servidor.")) {
-            try {
-                ArrayList<String> rooms = getRooms();
-                rooms.remove(roomStub.getRoomName());
-                updateRooms(rooms);
-                
-                roomStub = null;
-                updateRoom(null);
-            } catch (Exception e) {
-                System.err.println("Client exception: " + e.toString());
-                e.printStackTrace();
-            }
+            ArrayList<String> rooms = getRooms();
+            rooms.remove(getRoomName());
+            updateRooms(rooms);
+            
+            roomStub = null;
+            updateRoom(null);
             return;
         }
         synchronized (messageArea) {
@@ -243,6 +248,9 @@ public class UserChat implements IUserChat {
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     if (roomStub != null) {
+                        if (room.equals(getRoomName())) {
+                            return;
+                        }
                         leaveRoom();
                     }
                     roomStub = getRoomStub(room);
