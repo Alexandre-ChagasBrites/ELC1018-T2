@@ -43,11 +43,11 @@ public class UserChat implements IUserChat {
 
     public UserChat(String serverAddress) {
         this.serverAddress = serverAddress;
+
         leaveButton.setEnabled(false);
         messageArea.setEditable(false);
         textField.setEditable(false);
         rightPane.setEnabled(false);
-
         generalPane.setBorder(BorderFactory.createTitledBorder("General"));
         generalPane.add(createButton, BorderLayout.PAGE_START);
         generalPane.add(leaveButton, BorderLayout.CENTER);
@@ -90,7 +90,7 @@ public class UserChat implements IUserChat {
                     return;
                 }
                 createRoom(roomName);
-                refresh();
+                updateRooms(getRooms());
             }
         });
 
@@ -102,18 +102,13 @@ public class UserChat implements IUserChat {
 
         refreshButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                refresh();
+                updateRooms(getRooms());
             }
         });
 
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try { 
-                    roomStub.sendMsg(usrName, textField.getText());
-                } catch (Exception exception) {
-                    System.err.println("Client exception: " + exception.toString());
-                    exception.printStackTrace();
-                }
+                sendMsg(textField.getText());
                 textField.setText("");
             }
         });
@@ -140,37 +135,13 @@ public class UserChat implements IUserChat {
         } 
     }
 
-    private void refresh() {
-        try {
-            ArrayList<String> rooms = serverStub.getRooms();
-
-            roomsList.removeAll();
-            roomsList.setLayout(new BoxLayout(roomsList, BoxLayout.PAGE_AXIS));
-            
-            for (String room : rooms) {
-                JButton button = new JButton(room);
-                button.setMaximumSize(new Dimension(Short.MAX_VALUE, (int)button.getPreferredSize().getHeight()));
-                button.setAlignmentX(Component.CENTER_ALIGNMENT);
-                button.setHorizontalAlignment(AbstractButton.LEFT);
-                button.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (roomStub != null) {
-                            leaveRoom();
-                        }
-                        roomStub = getRoomStub(room);
-                        if (roomStub != null) {
-                            joinRoom();
-                        }
-                    }
-                });
-                roomsList.add(button);
-            }
-
-            frame.revalidate();
-            frame.repaint();
-        } catch (Exception e) {
-            System.err.println("Client exception: " + e.toString());
-            e.printStackTrace();
+    private ArrayList<String> getRooms() {
+        try { 
+            return serverStub.getRooms();
+        } catch (Exception exception) {
+            System.err.println("Client exception: " + exception.toString());
+            exception.printStackTrace();
+            return new ArrayList<>();
         }
     }
 
@@ -210,11 +181,7 @@ public class UserChat implements IUserChat {
         synchronized (messageArea) {
             try {
                 roomStub.joinRoom(usrName, userStub);
-                leaveButton.setEnabled(true);
-                textField.setEditable(true);
-                messageArea.setText("");
-                rightPane.setEnabled(true);
-                rightPane.setBorder(BorderFactory.createTitledBorder(roomStub.getRoomName()));
+                updateRoom(roomStub.getRoomName());
             } catch (Exception e) {
                 System.err.println("Client exception: " + e.toString());
                 e.printStackTrace();
@@ -227,38 +194,32 @@ public class UserChat implements IUserChat {
             try {
                 roomStub.leaveRoom(usrName);
                 roomStub = null;
-                leaveButton.setEnabled(false);
-                textField.setEditable(false);
-                messageArea.setText("");
-                rightPane.setEnabled(false);
-                rightPane.setBorder(BorderFactory.createTitledBorder("Room"));
+                updateRoom(null);
             } catch (Exception e) {
                 System.err.println("Client exception: " + e.toString());
                 e.printStackTrace();
             }
         }
     }
+
+    private void sendMsg(String msg) {
+        try { 
+            roomStub.sendMsg(usrName, msg);
+        } catch (Exception exception) {
+            System.err.println("Client exception: " + exception.toString());
+            exception.printStackTrace();
+        }
+    }
     
     public void deliverMsg(String senderName, String msg) throws RemoteException {
         if (senderName == null && msg.equals("Sala fechada pelo servidor.")) {
             try {
-                String room = roomStub.getRoomName();
-                for (int i = roomsList.getComponents().length - 1; i >= 0; i--) {
-                    JButton button = (JButton) roomsList.getComponent(i);
-                    if (button.getText().equals(room)) {
-                        roomsList.remove(i);
-                    }
-                }
+                ArrayList<String> rooms = getRooms();
+                rooms.remove(roomStub.getRoomName());
+                updateRooms(rooms);
                 
                 roomStub = null;
-                leaveButton.setEnabled(false);
-                textField.setEditable(false);
-                messageArea.setText("");
-                rightPane.setEnabled(false);
-                rightPane.setBorder(BorderFactory.createTitledBorder("Room"));
-                
-                frame.revalidate();
-                frame.repaint();
+                updateRoom(null);
             } catch (Exception e) {
                 System.err.println("Client exception: " + e.toString());
                 e.printStackTrace();
@@ -267,6 +228,51 @@ public class UserChat implements IUserChat {
         }
         synchronized (messageArea) {
             messageArea.append(senderName + ": " + msg + "\n");
+        }
+    }
+
+    private void updateRooms(ArrayList<String> rooms) {
+        roomsList.removeAll();
+        roomsList.setLayout(new BoxLayout(roomsList, BoxLayout.PAGE_AXIS));
+        
+        for (String room : rooms) {
+            JButton button = new JButton(room);
+            button.setMaximumSize(new Dimension(Short.MAX_VALUE, (int)button.getPreferredSize().getHeight()));
+            button.setAlignmentX(Component.CENTER_ALIGNMENT);
+            button.setHorizontalAlignment(AbstractButton.LEFT);
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    if (roomStub != null) {
+                        leaveRoom();
+                    }
+                    roomStub = getRoomStub(room);
+                    if (roomStub != null) {
+                        joinRoom();
+                    } else {
+                        updateRooms(getRooms());
+                    }
+                }
+            });
+            roomsList.add(button);
+        }
+
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    private void updateRoom(String roomName) {
+        if (roomName != null) {
+            leaveButton.setEnabled(true);
+            textField.setEditable(true);
+            messageArea.setText("");
+            rightPane.setEnabled(true);
+            rightPane.setBorder(BorderFactory.createTitledBorder(roomName));
+        } else {
+            leaveButton.setEnabled(false);
+            textField.setEditable(false);
+            messageArea.setText("");
+            rightPane.setEnabled(false);
+            rightPane.setBorder(BorderFactory.createTitledBorder("Room"));
         }
     }
 
@@ -279,7 +285,7 @@ public class UserChat implements IUserChat {
         user.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         user.frame.setVisible(true);
         user.connect();
-        user.refresh();
+        user.updateRooms(user.getRooms());
         user.login();
     }
 }
