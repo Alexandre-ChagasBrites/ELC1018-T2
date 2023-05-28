@@ -70,7 +70,6 @@ public class Server {
             this.frame.getContentPane().add(closeRoomButton, BorderLayout.PAGE_END);
             this.frame.setMinimumSize(new Dimension(500, 500));
             this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            this.frame.setVisible(true);
             this.stringList = new JList<String>();
             this.listModel = new DefaultListModel<>();
             stringList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -129,6 +128,8 @@ public class Server {
 
             jPaneRoomList.add(scrollPane);
             jPaneRoomList.setLayout(new BoxLayout(jPaneRoomList, BoxLayout.PAGE_AXIS));
+
+            this.frame.setVisible(true);
     }
 
         private void refreshRooms() {
